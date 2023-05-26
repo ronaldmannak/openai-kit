@@ -26,7 +26,7 @@ final class OpenAIKitTests: XCTestCase {
         do {
             _ = try await client.files.retrieve(id: "NOT-VALID-ID")
         } catch {
-            print(error)
+            print(error.localizedDescription)
         }
         
     }
