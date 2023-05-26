@@ -4,10 +4,10 @@ import Foundation
 
 protocol Request {
     var method: HTTPMethod { get }
-    var scheme: String { get }
+    var scheme: API.Scheme { get }
     var host: String { get }
     var path: String { get }
-    var body: HTTPClient.Body? { get }
+    var body: Data? { get }
     var headers: HTTPHeaders { get }
     var keyDecodingStrategy: JSONDecoder.KeyDecodingStrategy { get }
     var dateDecodingStrategy: JSONDecoder.DateDecodingStrategy { get }
@@ -16,9 +16,9 @@ protocol Request {
 extension Request {
     static var encoder: JSONEncoder { .requestEncoder }
 
-    var scheme: String { "https" }
+    var scheme: API.Scheme { .https }
     var host: String { "api.openai.com" }
-    var body: HTTPClient.Body? { nil }
+    var body: Data? { nil }
     
     var headers: HTTPHeaders {
         var headers = HTTPHeaders()

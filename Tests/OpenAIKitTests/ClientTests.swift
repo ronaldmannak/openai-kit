@@ -1,14 +1,18 @@
 import XCTest
+import NIOPosix
 import AsyncHTTPClient
 @testable import OpenAIKit
 
-final class OpenAIKitTests: XCTestCase {
+final class ClientTests: XCTestCase {
     
     private var httpClient: HTTPClient!
     private var client: Client!
     
     override func setUp() {
-        httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
+        
+        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+
+        httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
         
         let configuration = Configuration(apiKey: "YOUR-API-KEY")
         
@@ -26,7 +30,7 @@ final class OpenAIKitTests: XCTestCase {
         do {
             _ = try await client.files.retrieve(id: "NOT-VALID-ID")
         } catch {
-            print(error.localizedDescription)
+            print(error)
         }
         
     }
@@ -46,9 +50,12 @@ final class OpenAIKitTests: XCTestCase {
             .system(content: "You are a fairytale storyteller. Create a fairytale about the subject in the next message."),
             .user(content: "a happy wolf in the forrest")
         ]
+        
         let completion = try await client.chats.create(
             model: Model.GPT4.gpt4,
-            messages: messages)
+            messages: messages
+        )
+        
         print(completion)
     }
     
@@ -71,6 +78,22 @@ final class OpenAIKitTests: XCTestCase {
         
         print(completion)
     }
+    
+    func test_createChatStream() async throws {
+        let stream = try await client.chats.stream(
+            model: Model.GPT3.gpt3_5Turbo,
+            messages: [
+                .user(content: "Write a haiki")
+            ]
+        )
+        
+        for try await chat in stream {
+            if let message = chat.choices.first?.delta.content {
+                print(message)
+            }
+        }        
+    }
+
 
     func test_createEdit() async throws {
         let edit = try await client.edits.create(
@@ -123,36 +146,25 @@ final class OpenAIKitTests: XCTestCase {
         print(files)
     }
     
-    func test_uploadFile() async throws {
+    func test_file_uploadRetrieveDelete() async throws {
         let url = Bundle.module.url(forResource: "example", withExtension: "jsonl")!
         
         let data = try Data(contentsOf: url)
         
-        let file = try await client.files.upload(
+        let uploadedFile = try await client.files.upload(
             file: data,
-            fileName: "test.jsonl",
-            purpose: .answers
+            fileName: "\(UUID().uuidString).jsonl",
+            purpose: .fineTune
         )
         
-        print(file)
-    }
-    
-    func test_deleteFile() async throws {
-        let response = try await client.files.delete(id: "FILE-ID")
+        let retrievedFile = try await client.files.retrieve(id: uploadedFile.id)
         
-        print(response)
-    }
-    
-    func test_retrieveFile() async throws {
-        let file = try await client.files.retrieve(id: "FILE-ID")
+        let _: SingleLineJSONL = try await client.files.retrieveFileContent(id: retrievedFile.id)
         
-        print(file)
-    }
-    
-    func test_retrieveFileContent() async throws {
-        let file = try await client.files.retrieveFileContent(id: "FILE-ID")
+        let response = try await client.files.delete(id: retrievedFile.id)
+                
+        XCTAssertEqual(response.id, retrievedFile.id)
         
-        print(file)
     }
     
     func test_createModeration() async throws {
