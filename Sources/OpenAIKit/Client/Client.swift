@@ -14,7 +14,7 @@ public struct Client {
     public let images: ImageProvider
     public let models: ModelProvider
     public let moderations: ModerationProvider
-
+    
     public init(
         httpClient: HTTPClient,
         configuration: Configuration
