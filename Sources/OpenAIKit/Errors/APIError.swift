@@ -11,4 +11,11 @@ public struct APIErrorResponse: Error, Decodable {
     public let error: APIError
 }
 
-
+extension APIErrorResponse: LocalizedError {
+    public var errorDescription: String? {
+        if self.error.message.isEmpty {
+            return self.error.code ?? self.error.type
+        }
+        return self.error.message
+    }
+}
