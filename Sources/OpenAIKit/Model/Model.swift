@@ -34,6 +34,10 @@ public protocol ModelID {
     var id: String { get }
 }
 
+public protocol MaxTokens {
+    var maxTokens: Int { get }
+}
+
 extension Model {
     public enum GPT4: String, ModelID {
         case gpt4 = "gpt-4"
@@ -71,6 +75,66 @@ extension Model {
 
     public enum Whisper: String, ModelID {
         case whisper1 = "whisper-1"
+    }
+}
+
+extension Model.GPT4: MaxTokens {
+    /// Source: https://platform.openai.com/docs/models/gpt-4
+    public var maxTokens: Int {
+        switch self {
+        case .gpt4:
+            return 8_192
+        case .gpt40314:
+            return 8_192
+        case .gpt4_32k:
+            return 32_768
+        case .gpt4_32k0314:
+            return 32_768
+        }
+    }
+}
+
+extension Model.GPT3: MaxTokens {
+    /// Source: https://platform.openai.com/docs/models/gpt-3-5
+    /// and https://platform.openai.com/docs/models/whisper
+    public var maxTokens: Int {
+        switch self {
+        case .gpt3_5Turbo:
+            return 4_096
+        case .gpt3_5Turbo16K:
+            return 16_384
+        case .gpt3_5Turbo0301:
+            return 4_096
+        case .textDavinci003:
+            return 4_096
+        case .textDavinci002:
+            return 4_096
+        case .textCurie001:
+            return 2_049
+        case .textBabbage001:
+            return 2_049
+        case .textAda001:
+            return 2_049
+        case .textEmbeddingAda002:
+            // Note, see: https://github.com/MicrosoftDocs/azure-docs/issues/107061
+            return 8_192
+        case .textDavinci001:
+            return 2_049
+        case .textDavinciEdit001:
+            return 2_049
+        case .davinciInstructBeta:
+            return 2_049
+        case .davinci:
+            return 2_049
+        case .curieInstructBeta:
+            return 2_049
+        case .curie:
+            return 2_049
+        case .ada:
+            return 2_049
+        case .babbage:
+            return 2_049
+        }
     }
 }
 
